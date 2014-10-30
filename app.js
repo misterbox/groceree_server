@@ -1,21 +1,5 @@
 var sqlite3 = require( 'sqlite3' ).verbose();
-var db = new sqlite3.Database( ':memory:' );
-
-//db.serialize( function() {
-//    db.run( 'CREATE TABLE lorem (info TEXT)' );
-//
-//    var stmt = db.prepare( "INSERT INTO lorem VALUES (?)" );
-//
-//    for( var i = 0; i < 10; i++ ) {
-//        stmt.run( "ipsum " + i );
-//    }
-//
-//    stmt.finalize();
-//
-//    db.each( "SELECT rowid AS id, info FROM lorem", function( err, row ) {
-//        console.log( row.id + ": " + row.info );
-//    } );
-//} );
+var db = new sqlite3.Database( 'data/groceree_db' );
 
 var port = 8000
 var url = require( 'url' );
@@ -27,12 +11,20 @@ http.createServer( function ( req, res ) {
     var urlParts = req.url.split( "/" );
     var action = urlParts[ 1 ];
     res.writeHead( 200, { 'Content-Type': 'application/json' } );
-    console.log( urlParts );
+    var result;
 
     switch( req.method ) {
         case "GET":
             if( action == 'list' )
-                console.log( JSON.stringify( req.headers ) );
+                //console.log( JSON.stringify( req.headers ) );
+
+                // Get rows from our database
+                var stmt = "SELECT rowid AS id, item FROM groceree";
+                db.all( stmt, function( err, rows ) {
+                    //console.log( rows );
+
+                    res.end( JSON.stringify( rows ) );
+                } );
             break;
         case "POST":
             if( action == 'list' )
@@ -42,8 +34,9 @@ http.createServer( function ( req, res ) {
             console.log( "unknown" );
     }
     
-    var response = JSON.stringify( req.method );
-    res.end( response );
+    //console.log( result );
+    //var response = JSON.stringify( result );
+    //res.end( response );
 
-} ).listen( port, '127.0.0.1' );
+} ).listen( port, '0.0.0.0' );
 console.log( "listening on " + port );
