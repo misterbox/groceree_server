@@ -8,13 +8,13 @@ var items = [
         timestamp: 1416534964
     },
     {
-        item: "toast",
+        item: "Toast",
         isMarked: 1,
         isDeleted: 0,
         timestamp: 1416535000
     },
     {
-        item: "jelly",
+        item: "JELLY",
         isMarked: 0,
         isDeleted: 1,
         timestamp: 1416535042

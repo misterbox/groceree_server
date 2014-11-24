@@ -1,10 +1,9 @@
-var sqlite3 = require( 'sqlite3' ).verbose();
-var db = new sqlite3.Database( 'data/groceree_db' );
-
 var port = 8000
 var url = require( 'url' );
 var http = require( 'http' );
 var qString = require( 'querystring' );
+
+var itemObj = require( './item.js' );
 
 var TABLE_ITEM = "item";
 var COLUMN_ID = "id";
@@ -13,7 +12,44 @@ var COLUMN_ISMARKED = "isMarked";
 var COLUMN_ISDELETED = "isDeleted";
 var COLUMN_TIMESTAMP = "timestamp";
 
+// Array to hold all items and item names in memory
+var allItems = new Array();
+var allItemNames = new Array();
+
+// Generic statement to get all columns of all rows
+var stmtAllRows = "SELECT " + COLUMN_ID + ", " + COLUMN_ITEM
+    + ", " + COLUMN_ISMARKED + ", " + COLUMN_ISDELETED + ", "
+    + COLUMN_TIMESTAMP + " FROM " + TABLE_ITEM + " ORDER BY " + COLUMN_ITEM;
+
+// Insert Item statement
+var stmtInsItem = "INSERT INTO " + TABLE_ITEM + " (" + COLUMN_ITEM + ", " + COLUMN_ISMARKED
+    + ", " + COLUMN_ISDELETED + ", " + COLUMN_TIMESTAMP + ") VALUES (?,?,?,?)"
+
+// Select item by id statement
+var stmtRowById = "SELECT " + COLUMN_ID + ", " + COLUMN_ITEM
+    + ", " + COLUMN_ISMARKED + ", " + COLUMN_ISDELETED + ", "
+    + COLUMN_TIMESTAMP + " FROM " + TABLE_ITEM + " WHERE " + COLUMN_ID + " = ?";
+
+var sqlite3 = require( 'sqlite3' ).verbose();
+var db = new sqlite3.cached.Database( 'data/groceree_db', function( err ) {
+
+    if( !err ) {
+        // Get all rows from Item database
+        db.each( stmtAllRows, function( err, row ) {
+            if( err ) {
+                console.log( "Error retrieving items: " + err.message );
+            } else {
+                allItems.push( new itemObj( row.id, row.item, row.isMarked, row.isDeleted, row.timestamp ) );
+                allItemNames.push( row.item );
+            }
+        } );
+    } else {
+        console.log( "Error opening the database: " + err.message );
+    }
+} );
+
 http.createServer( function ( req, res ) {
+    console.log( "Items loaded in to memory: " + allItems.length );
 
     // Parse out the requested path
     // First level will be at urlParts[ 1 ]
@@ -24,19 +60,7 @@ http.createServer( function ( req, res ) {
     switch( req.method ) {
         case "GET":
             if( action == 'list' ) {
-                //console.log( JSON.stringify( req.headers ) );
-
-                // Get rows from our database
-                var stmt = "SELECT " + COLUMN_ID + ", " + COLUMN_ITEM
-                    + ", " + COLUMN_ISMARKED + ", " + COLUMN_ISDELETED + ", "
-                    + COLUMN_TIMESTAMP + " FROM " + TABLE_ITEM;
-
-                db.all( stmt, function( err, rows ) {
-                    console.log( rows );
-
-                    res.end( JSON.stringify( rows ) );
-                } );
-
+                res.end( JSON.stringify( allItems ) );
                 break;
             }
         case "POST":
@@ -55,19 +79,80 @@ http.createServer( function ( req, res ) {
                     // Number of items sent
                     console.log( "body length: " + body.length );
                     
-                    // For each item sent in postData:
-                    //  First check if item is in our current list
-                    //  If not, add to list and insert in to db
-                    //  If so, compare timestamps of the two versions
-                    //      If our timestamp is greater, discard postData version
-                    //      If payload timestamp is greater, replace our version with it
-                    //          Update this item's row in the db
-                    postData.forEach( function( item, i, items ) {
-                        console.log( "postData[" + i + "].item: " + item.item );
+                    /*
+                     Pre-work:
+                        Set all item names in postData to lower case
+                        Sort the 'postData' array
+                          
+                     For each itemObj sent in postData:
+                      First check if itemObj is in our current list
+                      If not, add to list and insert in to db
+                      If so, compare timestamps of the two versions
+                          If our timestamp is greater, discard postData version
+                          If timestamp of postData version is greater, replace our version with it
+                              Update this item's row in the db
+                    */
+
+                    console.log( "Lower-casing postData" );
+                    postData.forEach( function( itemObj, i, items ) {
+                        itemObj.item = itemObj.item.toLowerCase();
                     } );
 
-                    console.log( postData.length );
-                    //console.log( postData );
+                    console.log( "Sorting postData" );
+                    postData.sort( function( a, b ) {
+                        if( a.item.localeCompare( b.item ) < 0 ) {
+                            return -1;
+                        } else if( a.item.localeCompare( b.item ) > 0 ) {
+                            return 1;
+                        }
+
+                        return 0;
+                    } );
+
+                     /*
+                     For each itemObj sent in postData:
+                      First check if itemObj is in our current list
+                      If not, add to list and insert in to db
+                      If so, compare timestamps of the two versions
+                          If our timestamp is greater, discard postData version
+                          If timestamp of postData version is greater, replace our version with it
+                              Update this item's row in the db
+                    */
+                    // We're going to need an array of Item name strings to do this.
+                    // Search allItemNames for the occurrece of itemObj.item. The index
+                    // returned will correspond to the index to use in the allItems array.
+                    postData.forEach( function( item, i, items ) {
+                        // Check if itemObj is an Item we already have
+                        index = allItemNames.indexOf( item.item );
+                        console.log( "item: %s, index: %d", item.item, index );
+
+                        // If itemObj is not found
+                        if( index >= 0 ) {
+                            
+                        } else {
+                            console.log( "item %s not found. Adding.", item.item );
+                            //allItems.push( new itemObj( item.id, item.item, item.isMarked, item.isDeleted, item.timestamp ) );
+                            //allItemNames.push( item.item );
+                            
+                            // Insert items in to db, then immediately retrieve this row turning it into an Item object
+                            db.run( stmtInsItem, item.item, item.isMarked, item.isDeleted, item.timestamp, function( err ) {
+                                if( err ) {
+                                    console.log( "Error inserting new item: " + err.message );
+                                } else {
+                                    var insertId = this.lastID;
+
+                                    // Build Item object from row just inserted
+                                    db.get( stmtRowById, insertId, function( err, row ) {
+                                        if( err ) {
+                                            console.log( "Error selecting row ID %d: %s", insertId, err.message );
+                                        } else {
+                                            allItems.push( new itemObj( row.id, row.item, row.isMarked, row.isDeleted, row.timestamp ) );
+                                        }
+                                    } );
+                                }
+                            } );
+                        }
+                    } );
 
                     // Prepare the db statement
                     //var stmt = db.prepare( "INSERT INTO groceree VALUES (?)" );

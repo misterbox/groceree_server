@@ -12,20 +12,16 @@ db.serialize( function() {
 
     db.run( "CREATE TABLE IF NOT EXISTS " + TABLE_ITEM
         + "(" + COLUMN_ID + " integer primary key autoincrement, "
-        + COLUMN_ITEM + " text not null, "
+        + COLUMN_ITEM + " text unique not null, "
         + COLUMN_ISDELETED + " boolean not null default 0, "    // default to false
         + COLUMN_ISMARKED + " boolean not null default 0, "     // default to false
         + COLUMN_TIMESTAMP + " datetime default current_timestamp);" );
 
     var stmt = db.prepare( "INSERT INTO " + TABLE_ITEM + " (" + COLUMN_ITEM + ") VALUES (?)" );
 
-    for( var i = 0; i < 10; i++ ) {
+    for( var i = 10; i >= 0; i-- ) {
         stmt.run( "item " + i );
     }
 
     stmt.finalize();
-
-    //db.each( "SELECT rowid AS id, info FROM lorem", function( err, row ) {
-        //console.log( row.id + ": " + row.info );
-    //} );
 } );
