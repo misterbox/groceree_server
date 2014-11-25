@@ -15,7 +15,7 @@ db.serialize( function() {
         + COLUMN_ITEM + " text unique not null, "
         + COLUMN_ISDELETED + " boolean not null default 0, "    // default to false
         + COLUMN_ISMARKED + " boolean not null default 0, "     // default to false
-        + COLUMN_TIMESTAMP + " datetime default current_timestamp);" );
+        + COLUMN_TIMESTAMP + " datetime default (strftime('%s', 'now') ) );" );
 
     var stmt = db.prepare( "INSERT INTO " + TABLE_ITEM + " (" + COLUMN_ITEM + ") VALUES (?)" );
 
