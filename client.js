@@ -18,6 +18,12 @@ var items = [
         isMarked: 0,
         isDeleted: 1,
         timestamp: 1416535042
+    },
+    {
+        item: "item 0",
+        isMarked: 0,
+        isDeleted: 1,
+        timestamp: 1416535042
     }
 ];
 

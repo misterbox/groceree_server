@@ -83,14 +83,6 @@ http.createServer( function ( req, res ) {
                      Pre-work:
                         Set all item names in postData to lower case
                         Sort the 'postData' array
-                          
-                     For each itemObj sent in postData:
-                      First check if itemObj is in our current list
-                      If not, add to list and insert in to db
-                      If so, compare timestamps of the two versions
-                          If our timestamp is greater, discard postData version
-                          If timestamp of postData version is greater, replace our version with it
-                              Update this item's row in the db
                     */
 
                     console.log( "Lower-casing postData" );
@@ -126,13 +118,15 @@ http.createServer( function ( req, res ) {
                         index = allItemNames.indexOf( item.item );
                         console.log( "item: %s, index: %d", item.item, index );
 
-                        // If itemObj is not found
+                        // If itemObj is found
                         if( index >= 0 ) {
-                            
+                            allItems[ index ].isMarked = item.isMarked;
+                            allItems[ index ].isDeleted = item.isDeleted;
+                            allItems[ index ].timestamp = Date.now();
+
+                            console.log( "item updated: " + JSON.stringify( allItems[ index ] ) );
                         } else {
                             console.log( "item %s not found. Adding.", item.item );
-                            //allItems.push( new itemObj( item.id, item.item, item.isMarked, item.isDeleted, item.timestamp ) );
-                            //allItemNames.push( item.item );
                             
                             // Insert items in to db, then immediately retrieve this row turning it into an Item object
                             db.run( stmtInsItem, item.item, item.isMarked, item.isDeleted, item.timestamp, function( err ) {
