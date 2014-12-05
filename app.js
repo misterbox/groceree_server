@@ -7,35 +7,13 @@ var itemObj = require( './item.js' );
 
 var utils = require( './utils.js' );
 
-var TABLE_ITEM = "item";
-var COLUMN_ID = "id";
-var COLUMN_ITEM = "item";
-var COLUMN_ISMARKED = "isMarked";
-var COLUMN_ISDELETED = "isDeleted";
-var COLUMN_TIMESTAMP = "timestamp";
-
 // Array to hold all items and item names in memory
 var allItems = new Array();
 var allItemNames = new Array();
 
-var dataSource = require( 'itemDataSource.js' );
-
-var db = new sqlite3.cached.Database( 'data/groceree_db', function( err ) {
-
-    if( !err ) {
-        // Get all rows from Item database
-        db.each( stmtAllRows, function( err, row ) {
-            if( err ) {
-                console.log( "Error retrieving items: " + err.message );
-            } else {
-                allItems.push( new itemObj( row.id, row.item, row.isMarked, row.isDeleted, row.timestamp ) );
-                allItemNames.push( row.item );
-            }
-        } );
-    } else {
-        console.log( "Error opening the database: " + err.message );
-    }
-} );
+var itemDataSource = require( './itemDataSource.js' );
+var dataSource = new itemDataSource( allItems, allItemNames );
+dataSource.open();
 
 http.createServer( function ( req, res ) {
     console.log( "Items loaded in to memory: " + allItems.length );
@@ -57,7 +35,7 @@ http.createServer( function ( req, res ) {
                 var body = "";
 
                 req.on( 'data', function( chunk ) {
-                    console.log( "chunk: " + chunk );
+                    //console.log( "chunk: " + chunk );
                     body += chunk
                 } );
 
@@ -117,25 +95,7 @@ http.createServer( function ( req, res ) {
                             console.log( "item updated: " + JSON.stringify( allItems[ index ] ) );
                         } else { // INSERT NEW ITEM
                             console.log( "item %s not found. Adding.", item.item );
-                            
-                            // Insert items in to db, then immediately retrieve this row turning it into an Item object
-                            db.run( stmtInsItem, item.item, item.isMarked, item.isDeleted, item.timestamp, function( err ) {
-                                if( err ) {
-                                    console.log( "Error inserting new item: " + err.message );
-                                } else {
-                                    var insertId = this.lastID;
-
-                                    // Build Item object from row just inserted
-                                    db.get( stmtRowById, insertId, function( err, row ) {
-                                        if( err ) {
-                                            console.log( "Error selecting row ID %d: %s", insertId, err.message );
-                                        } else {
-                                            allItems.push( new itemObj( row.id, row.item, row.isMarked, row.isDeleted, row.timestamp ) );
-                                            allItemNames.push( row.item );
-                                        }
-                                    } );
-                                }
-                            } );
+                            dataSource.addItem( item );
                         }
                     } );
 
