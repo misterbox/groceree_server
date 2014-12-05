@@ -5,6 +5,8 @@ var qString = require( 'querystring' );
 
 var itemObj = require( './item.js' );
 
+var utils = require( './utils.js' );
+
 var TABLE_ITEM = "item";
 var COLUMN_ID = "id";
 var COLUMN_ITEM = "item";
@@ -118,14 +120,15 @@ http.createServer( function ( req, res ) {
                         index = allItemNames.indexOf( item.item );
                         console.log( "item: %s, index: %d", item.item, index );
 
+                        // UPDATE ITEM
                         // If itemObj is found
                         if( index >= 0 ) {
                             allItems[ index ].isMarked = item.isMarked;
                             allItems[ index ].isDeleted = item.isDeleted;
-                            allItems[ index ].timestamp = Date.now();
+                            allItems[ index ].timestamp = utils.getTimeStamp();
 
                             console.log( "item updated: " + JSON.stringify( allItems[ index ] ) );
-                        } else {
+                        } else { // INSERT NEW ITEM
                             console.log( "item %s not found. Adding.", item.item );
                             
                             // Insert items in to db, then immediately retrieve this row turning it into an Item object
@@ -141,6 +144,7 @@ http.createServer( function ( req, res ) {
                                             console.log( "Error selecting row ID %d: %s", insertId, err.message );
                                         } else {
                                             allItems.push( new itemObj( row.id, row.item, row.isMarked, row.isDeleted, row.timestamp ) );
+                                            allItemNames.push( row.item );
                                         }
                                     } );
                                 }
