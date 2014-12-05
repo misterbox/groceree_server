@@ -3,10 +3,6 @@ var url = require( 'url' );
 var http = require( 'http' );
 var qString = require( 'querystring' );
 
-var itemObj = require( './item.js' );
-
-var utils = require( './utils.js' );
-
 // Array to hold all items and item names in memory
 var allItems = new Array();
 var allItemNames = new Array();
@@ -80,22 +76,19 @@ http.createServer( function ( req, res ) {
                     // We're going to need an array of Item name strings to do this.
                     // Search allItemNames for the occurrece of itemObj.item. The index
                     // returned will correspond to the index to use in the allItems array.
-                    postData.forEach( function( item, i, items ) {
+                    postData.forEach( function( newItem, i, items ) {
                         // Check if itemObj is an Item we already have
-                        index = allItemNames.indexOf( item.item );
-                        console.log( "item: %s, index: %d", item.item, index );
+                        index = allItemNames.indexOf( newItem.item );
+                        console.log( "item: %s, index: %d", newItem.item, index );
 
                         // UPDATE ITEM
                         // If itemObj is found
-                        if( index >= 0 ) {
-                            allItems[ index ].isMarked = item.isMarked;
-                            allItems[ index ].isDeleted = item.isDeleted;
-                            allItems[ index ].timestamp = utils.getTimeStamp();
-
+                        if( index >= 0 && newItem.timestamp > allItems[ index ].timestamp ) {
                             console.log( "item updated: " + JSON.stringify( allItems[ index ] ) );
-                        } else { // INSERT NEW ITEM
-                            console.log( "item %s not found. Adding.", item.item );
-                            dataSource.addItem( item );
+                            dataSource.updateItem( newItem, index );
+                        } else if( index < 0 ) { // INSERT NEW ITEM
+                            console.log( "item %s not found. Adding.", newItem.item );
+                            dataSource.addItem( newItem );
                         }
                     } );
 
