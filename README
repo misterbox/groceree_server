@@ -1,0 +1,40 @@
+Hi
+
+This is 'groceree_server', the backend to my Android app, Groceree. This is my first time trying
+something of this scale with NodeJS, so it's probably terrible. I'm sorry about that.
+
+This is an API server that maintains a list of grocery items. The implementation is pretty simple and
+niave, but it's taught me a lot. These are the specifics:
+
+Method: GET
+    /list
+        Sends all 'active' items, meaning rows from the 'item' database whose 'isDeleted' value is false.
+
+Method: POST
+    /syncItems
+        Given a payload of a Unix timestamp and array of items, the server adds new items to the database,
+        and updates existing items if the payload item is 'newer'; 'newer' meaning it has a timestamp greater
+        than that of the server's existing item.
+        
+        The payload should be of the form:
+
+        {
+            'timestamp': <unix timestamp>,
+            'items': [
+                {
+                    'item': <item name>,
+                    'isMarked': <isMarked boolean>,
+                    'isDeleted': <isDeleted boolean>,
+                    'timestamp': <Unix timestamp>
+                },
+                {
+                    ...
+                },
+                {
+                    ...
+                }
+            ]
+        }
+
+        Upon receipt of such a payload, the server will update its list item accordingly, and then send a response
+        with a payload of all items, new and existing, that have changed since the timestamp sent in the request payload.

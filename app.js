@@ -38,9 +38,8 @@ http.createServer( function ( req, res ) {
                 req.on( 'end', function() {
                     // Parse POST data from request body
                     var postData = JSON.parse( body );
-
-                    // Number of items sent
-                    console.log( "body length: " + body.length );
+                    var postItems = postData.items;
+                    var postTimeStamp = postData.timestamp;
                     
                     /*
                      Pre-work:
@@ -49,12 +48,12 @@ http.createServer( function ( req, res ) {
                     */
 
                     console.log( "Lower-casing postData" );
-                    postData.forEach( function( itemObj, i, items ) {
+                    postItems.forEach( function( itemObj, i, items ) {
                         itemObj.item = itemObj.item.toLowerCase();
                     } );
 
                     console.log( "Sorting postData" );
-                    postData.sort( function( a, b ) {
+                    postItems.sort( function( a, b ) {
                         if( a.item.localeCompare( b.item ) < 0 ) {
                             return -1;
                         } else if( a.item.localeCompare( b.item ) > 0 ) {
@@ -76,7 +75,7 @@ http.createServer( function ( req, res ) {
                     // We're going to need an array of Item name strings to do this.
                     // Search allItemNames for the occurrece of itemObj.item. The index
                     // returned will correspond to the index to use in the allItems array.
-                    postData.forEach( function( newItem, i, items ) {
+                    postItems.forEach( function( newItem, i, items ) {
                         // Check if itemObj is an Item we already have
                         index = allItemNames.indexOf( newItem.item );
                         console.log( "item: %s, index: %d", newItem.item, index );

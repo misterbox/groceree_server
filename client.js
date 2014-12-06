@@ -1,39 +1,42 @@
 var http = require( 'http' );
 
-var items = [
-    {
-        item: "bread",
-        isMarked: 0,
-        isDeleted: 0,
-        timestamp: 1416534964
-    },
-    {
-        item: "Toast",
-        isMarked: 1,
-        isDeleted: 0,
-        timestamp: 1416535000
-    },
-    {
-        item: "JELLY",
-        isMarked: 0,
-        isDeleted: 1,
-        timestamp: 1416535042
-    },
-    {
-        item: "item 0",
-        isMarked: 0,
-        isDeleted: 1,
-        timestamp: 1417806217
-    }
-];
+var payload = {
+    'timestamp' : 1416534964,
+    'items' : [
+        {
+            item: "bread",
+            isMarked: 0,
+            isDeleted: 0,
+            timestamp: 1416534964
+        },
+        {
+            item: "Toast",
+            isMarked: 1,
+            isDeleted: 0,
+            timestamp: 1416535000
+        },
+        {
+            item: "JELLY",
+            isMarked: 0,
+            isDeleted: 1,
+            timestamp: 1416535042
+        },
+        {
+            item: "item 0",
+            isMarked: 0,
+            isDeleted: 1,
+            timestamp: 1417828156
+        }
+    ]
+}
 
-var itemString = JSON.stringify( items );
-console.log( itemString );
-console.log( "length: " + itemString.length );
+var payloadString = JSON.stringify( payload );
+console.log( payloadString );
+console.log( "length: " + payloadString.length );
 
 var headers = {
     'Content-Type': 'application/json',
-    'Content-Length': itemString.length
+    'Content-Length': payloadString.length
 };
 
 var options = {
@@ -67,5 +70,5 @@ req.on( 'error', function( e ) {
     console.log( 'problem with request: ' + e.message );
   } );
 
-req.write( itemString );
+req.write( payloadString );
 req.end();
