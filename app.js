@@ -20,7 +20,7 @@ http.createServer( function ( req, res ) {
     // First level will be at urlParts[ 1 ]
     var urlParts = req.url.split( "/" );
     var action = urlParts[ 1 ];
-    res.writeHead( 200, { 'Content-Type': 'application/json' } );
+    //res.writeHead( 200, { 'Content-Type': 'application/json' } );
 
     switch( req.method ) {
         case "GET":
@@ -29,7 +29,16 @@ http.createServer( function ( req, res ) {
                     'timestamp': utils.getTimestamp(),
                     'items': allItems
                 }
-                res.end( JSON.stringify( resObj ) );
+
+                var resString = JSON.stringify( resObj );
+
+                var headers = {
+                    'Content-Type': 'application/json',
+                    'Content-Length': resString.length
+                };
+
+                res.writeHead( 200, headers );
+                res.end( resString );
                 break;
             }
         case "POST":
@@ -98,9 +107,15 @@ http.createServer( function ( req, res ) {
 
                     // Build an object with items that have changed since 'postTimestamp'
                     resObj = dataSource.getItemsSince( postTimestamp );
-                    console.log( "Response: " + JSON.stringify( resObj ) );
-                    res.write( JSON.stringify( resObj ) );
-                    res.writeHead( 200 );
+                    resString = JSON.stringify( resObj );
+
+                    var headers = {
+                        'Content-Type': 'application/json',
+                        'Content-Length': resString.length
+                    };
+
+                    res.writeHead( 200, headers );
+                    res.write( resString );
                     res.end();
                 } );
 
@@ -115,10 +130,5 @@ http.createServer( function ( req, res ) {
             res.writeHead( 501, { 'Content-Type': 'text/plain' } );
             res.end( "Request not understood" );
     }
-    
-    //console.log( result );
-    //var response = JSON.stringify( result );
-    //res.end( response );
-
 } ).listen( port, '0.0.0.0' );
 console.log( "listening on " + port );
