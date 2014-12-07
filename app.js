@@ -3,6 +3,8 @@ var url = require( 'url' );
 var http = require( 'http' );
 var qString = require( 'querystring' );
 
+var utils = require( './utils.js' );
+
 // Array to hold all items and item names in memory
 var allItems = new Array();
 var allItemNames = new Array();
@@ -23,7 +25,11 @@ http.createServer( function ( req, res ) {
     switch( req.method ) {
         case "GET":
             if( action == 'list' ) {
-                res.end( JSON.stringify( allItems ) );
+                var resObj = {
+                    'timestamp': utils.getTimestamp(),
+                    'items': allItems
+                }
+                res.end( JSON.stringify( resObj ) );
                 break;
             }
         case "POST":
@@ -31,7 +37,6 @@ http.createServer( function ( req, res ) {
                 var body = "";
 
                 req.on( 'data', function( chunk ) {
-                    //console.log( "chunk: " + chunk );
                     body += chunk
                 } );
 
@@ -39,7 +44,7 @@ http.createServer( function ( req, res ) {
                     // Parse POST data from request body
                     var postData = JSON.parse( body );
                     var postItems = postData.items;
-                    var postTimeStamp = postData.timestamp;
+                    var postTimestamp = postData.timestamp;
                     
                     /*
                      Pre-work:
@@ -91,21 +96,10 @@ http.createServer( function ( req, res ) {
                         }
                     } );
 
-                    // Prepare the db statement
-                    //var stmt = db.prepare( "INSERT INTO groceree VALUES (?)" );
-
-                    // Insert POST payload in to the db
-                    // Only works for item=<value> pairs
-                    /*
-                    for( var i = 0; i < postData.item.length; i++ ) {
-                        //stmt.run( postData.item[ i ] );
-                    }
-                    */
-
-                    //body = JSON.parse( postData );
-
-                    //stmt.finalize();
-
+                    // Build an object with items that have changed since 'postTimestamp'
+                    resObj = dataSource.getItemsSince( postTimestamp );
+                    console.log( "Response: " + JSON.stringify( resObj ) );
+                    res.write( JSON.stringify( resObj ) );
                     res.writeHead( 200 );
                     res.end();
                 } );

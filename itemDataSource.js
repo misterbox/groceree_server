@@ -28,6 +28,10 @@ var stmtUpdItem = "UPDATE " + TABLE_ITEM + " SET " + COLUMN_ISMARKED + " = ?, " 
     COLUMN_ISDELETED + " = ?, " + COLUMN_TIMESTAMP + " = ? WHERE " + COLUMN_ITEM +
     " = ?";
 
+// Select rows by timestamp
+var stmtRowByTime = "SELECT * FROM " + TABLE_ITEM + " WHERE " + COLUMN_TIMESTAMP +
+    " > ?";
+
 // Array to hold all items and item names in memory
 var allItems;
 var allItemNames;
@@ -58,12 +62,13 @@ itemDataSource.prototype.open = function() {
 };
 
 itemDataSource.prototype.addItem = function( newItem ) {
-    allItems.push( new itemObj( newItem.id, newItem.item, newItem.isMarked, newItem.isDeleted, newItem.timestamp ) );
+    var curTimestamp = utils.getTimestamp();
+    allItems.push( new itemObj( newItem.id, newItem.item, newItem.isMarked, newItem.isDeleted, curTimestamp ) );
     var itemIndex = allItems.length - 1;
     allItemNames.push( newItem.item );
 
     // Insert items in to db, then immediately retrieve this row turning it into an Item object
-    db.run( stmtInsItem, newItem.item, newItem.isMarked, newItem.isDeleted, newItem.timestamp, function( err ) {
+    db.run( stmtInsItem, newItem.item, newItem.isMarked, newItem.isDeleted, curTimestamp, function( err ) {
         if( err ) {
             console.log( "Error inserting new item: " + err.message );
         } else {
@@ -81,15 +86,29 @@ itemDataSource.prototype.addItem = function( newItem ) {
 };
 
 itemDataSource.prototype.updateItem = function( item, index ) {
+    var curTimestamp = utils.getTimestamp();
     allItems[ index ].isMarked = item.isMarked;
     allItems[ index ].isDeleted = item.isDeleted;
-    allItems[ index ].timestamp = item.timestamp;
+    allItems[ index ].timestamp = curTimestamp;
 
-    db.run( stmtUpdItem, item.isMarked, item.isDeleted, item.timestamp, item.item, function( err ) {
+    db.run( stmtUpdItem, item.isMarked, item.isDeleted, curTimestamp, item.item, function( err ) {
         if( err ) {
             console.log( "Error updating item %d: %s", allItems[ index ].id, allItems[ index ].item );
         }
     } );
+};
+
+itemDataSource.prototype.getItemsSince = function( timestamp ) {
+    resObj = {
+        'timestamp': utils.getTimestamp(),
+        'items': allItems.filter( function( item ){
+                    if( item.timestamp > timestamp ) {
+                        return item;
+                    }
+                 } )
+    };
+
+    return resObj;
 };
 
 module.exports = itemDataSource;

@@ -4,7 +4,7 @@ This is 'groceree_server', the backend to my Android app, Groceree. This is my f
 something of this scale with NodeJS, so it's probably terrible. I'm sorry about that.
 
 This is an API server that maintains a list of grocery items. The implementation is pretty simple and
-niave, but it's taught me a lot. These are the specifics:
+naive, but it's taught me a lot. These are the specifics:
 
 Method: GET
     /list
