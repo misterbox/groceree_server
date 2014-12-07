@@ -1,4 +1,4 @@
-Hi
+Hey there.
 
 This is 'groceree_server', the backend to my Android app, Groceree. This is my first time trying
 something of this scale with NodeJS, so it's probably terrible. I'm sorry about that.
@@ -9,6 +9,29 @@ niave, but it's taught me a lot. These are the specifics:
 Method: GET
     /list
         Sends all 'active' items, meaning rows from the 'item' database whose 'isDeleted' value is false.
+        The requester should expect a response payload of the form:
+
+        {
+            'timestamp': <unix timestamp>,
+            'items': [
+                {
+                    'item': <item name>,
+                    'isMarked': <isMarked boolean>,
+                    'isDeleted': <isDeleted boolean>,
+                    'timestamp': <Unix timestamp>
+                },
+                {
+                    ...
+                },
+                {
+                    ...
+                }
+            ]
+        }
+
+        Where <unix timestamp> is in epoch time marked at the moment the response is sent.
+
+
 
 Method: POST
     /syncItems
@@ -36,5 +59,6 @@ Method: POST
             ]
         }
 
-        Upon receipt of such a payload, the server will update its list item accordingly, and then send a response
+        Upon receipt of such a payload, the server will update its item list accordingly, and then send a response
         with a payload of all items, new and existing, that have changed since the timestamp sent in the request payload.
+        The form will be the same as that of the '/list' endpoint.
