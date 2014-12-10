@@ -25,8 +25,10 @@ http.createServer( function ( req, res ) {
     switch( req.method ) {
         case "GET":
             if( action == 'list' ) {
+                var curTimestamp = utils.getTimestamp();
+                console.log( "GET response timestamp: " + curTimestamp );
                 var resObj = {
-                    'timestamp': utils.getTimestamp(),
+                    'timestamp': curTimestamp,
                     'items': allItems
                 }
 
@@ -40,6 +42,15 @@ http.createServer( function ( req, res ) {
                 res.writeHead( 200, headers );
                 res.end( resString );
                 break;
+            } else if( action == 'dump' ) {
+                resString = JSON.stringify( allItems ) + JSON.stringify( allItemNames );
+                var headers = {
+                    'Content-Type': 'text/plain',
+                    'Content-Length':   resString.length
+                }
+
+                res.writeHead( 200, headers );
+                res.end( resString );
             }
         case "POST":
             if( action == 'syncItems' ) {
@@ -54,60 +65,72 @@ http.createServer( function ( req, res ) {
                     var postData = JSON.parse( body );
                     var postItems = postData.items;
                     var postTimestamp = postData.timestamp;
-                    
-                    /*
-                     Pre-work:
-                        Set all item names in postData to lower case
-                        Sort the 'postData' array
-                    */
 
-                    console.log( "Lower-casing postData" );
-                    postItems.forEach( function( itemObj, i, items ) {
-                        itemObj.item = itemObj.item.toLowerCase();
-                    } );
+                    // If items were actually sent
+                    console.log( "POST request timestamp: " + postTimestamp ); 
+                    console.log( "postItems length: " + postItems.length );
+                    console.log( "postItems: " + JSON.stringify( postItems ) );
+                    if( postItems.length ) {
+                        /*
+                        Pre-work:
+                            Set all item names in postData to lower case
+                            Sort the 'postData' array
+                        */
 
-                    console.log( "Sorting postData" );
-                    postItems.sort( function( a, b ) {
-                        if( a.item.localeCompare( b.item ) < 0 ) {
-                            return -1;
-                        } else if( a.item.localeCompare( b.item ) > 0 ) {
-                            return 1;
-                        }
+                        console.log( "Lower-casing postData" );
+                        postItems.forEach( function( itemObj, i, items ) {
+                            itemObj.item = itemObj.item.toLowerCase();
+                        } );
 
-                        return 0;
-                    } );
+                        console.log( "Sorting postData" );
+                        postItems.sort( function( a, b ) {
+                            if( a.item.localeCompare( b.item ) < 0 ) {
+                                return -1;
+                            } else if( a.item.localeCompare( b.item ) > 0 ) {
+                                return 1;
+                            }
 
-                     /*
-                     For each itemObj sent in postData:
-                      First check if itemObj is in our current list
-                      If not, add to list and insert in to db
-                      If so, compare timestamps of the two versions
-                          If our timestamp is greater, discard postData version
-                          If timestamp of postData version is greater, replace our version with it
-                              Update this item's row in the db
-                    */
-                    // We're going to need an array of Item name strings to do this.
-                    // Search allItemNames for the occurrece of itemObj.item. The index
-                    // returned will correspond to the index to use in the allItems array.
-                    postItems.forEach( function( newItem, i, items ) {
-                        // Check if itemObj is an Item we already have
-                        index = allItemNames.indexOf( newItem.item );
-                        console.log( "item: %s, index: %d", newItem.item, index );
+                            return 0;
+                        } );
 
-                        // UPDATE ITEM
-                        // If itemObj is found
-                        if( index >= 0 && newItem.timestamp > allItems[ index ].timestamp ) {
-                            console.log( "item updated: " + JSON.stringify( allItems[ index ] ) );
-                            dataSource.updateItem( newItem, index );
-                        } else if( index < 0 ) { // INSERT NEW ITEM
-                            console.log( "item %s not found. Adding.", newItem.item );
-                            dataSource.addItem( newItem );
-                        }
-                    } );
+                        console.log( "timestamp sent: " + postTimestamp );
+                        console.log( "items sent: " + JSON.stringify( postItems ) );
+
+                        /*
+                        For each itemObj sent in postData:
+                        First check if itemObj is in our current list
+                        If not, add to list and insert in to db
+                        If so, compare timestamps of the two versions
+                            If our timestamp is greater, discard postData version
+                            If timestamp of postData version is greater, replace our version with it
+                                Update this item's row in the db
+                        */
+                        // We're going to need an array of Item name strings to do this.
+                        // Search allItemNames for the occurrece of itemObj.item. The index
+                        // returned will correspond to the index to use in the allItems array.
+                        postItems.forEach( function( newItem, i, items ) {
+                            // Check if itemObj is an Item we already have
+                            index = allItemNames.indexOf( newItem.item );
+                            console.log( "item: %s, index: %d", newItem.item, index );
+
+                            // UPDATE ITEM
+                            // If itemObj is found
+                            if( index >= 0 && newItem.timestamp > allItems[ index ].timestamp ) {
+                                console.log( "item updated: " + JSON.stringify( allItems[ index ] ) );
+                                dataSource.updateItem( newItem, index );
+                            } else if( index < 0 ) { // INSERT NEW ITEM
+                                console.log( "item %s not found. Adding.", newItem.item );
+                                dataSource.addItem( newItem );
+                            }
+                        } );
+                    }
 
                     // Build an object with items that have changed since 'postTimestamp'
-                    resObj = dataSource.getItemsSince( postTimestamp );
+                    // Do not include items just sent to us
+                    resObj = dataSource.getItemsSince( postTimestamp, postItems );
                     resString = JSON.stringify( resObj );
+
+                    console.log( "POST response timestamp: " + resObj.timestamp );
 
                     var headers = {
                         'Content-Type': 'application/json',

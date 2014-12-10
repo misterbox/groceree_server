@@ -3,9 +3,9 @@
 */
 
 // Item object constructor
-function Item( id, name, isMarked, isDeleted, timestamp ) {
+function Item( id, item, isMarked, isDeleted, timestamp ) {
     this.id = id;
-    this.name = name;
+    this.item = item;
     
     if( isMarked ) {
         this.isMarked = true;

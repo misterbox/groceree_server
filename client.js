@@ -1,32 +1,20 @@
 var http = require( 'http' );
 
 var payload = {
-    'timestamp' : 1417915909,
+    'timestamp' : 1418255736,
     'items' : [
         {
-            item: "bread",
-            isMarked: 0,
-            isDeleted: 0,
-            timestamp: 1416534964
-        },
-        {
-            item: "Toast",
-            isMarked: 1,
-            isDeleted: 0,
-            timestamp: 1416535000
-        },
-        {
-            item: "JELLY",
-            isMarked: 0,
-            isDeleted: 1,
-            timestamp: 1416535042
-        },
-        {
             item: "item 0",
-            isMarked: 0,
-            isDeleted: 1,
-            timestamp: 1417914176
-        }
+            isMarked: false,
+            isDeleted: true,
+            timestamp: 1418255736
+        },
+        {
+            item: "tar",
+            isMarked: true,
+            isDeleted: true,
+            timestamp: 1418255736
+        },
     ]
 }
 

@@ -19,9 +19,9 @@ db.serialize( function() {
 
     var stmt = db.prepare( "INSERT INTO " + TABLE_ITEM + " (" + COLUMN_ITEM + ") VALUES (?)" );
 
-    for( var i = 10; i >= 0; i-- ) {
-        stmt.run( "item " + i );
-    }
-
-    stmt.finalize();
+//    for( var i = 10; i >= 0; i-- ) {
+//        stmt.run( "item " + i );
+//    }
+//
+//    stmt.finalize();
 } );

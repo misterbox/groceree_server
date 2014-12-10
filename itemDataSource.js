@@ -98,17 +98,27 @@ itemDataSource.prototype.updateItem = function( item, index ) {
     } );
 };
 
-itemDataSource.prototype.getItemsSince = function( timestamp ) {
+itemDataSource.prototype.getItemsSince = function( postTimestamp, postItems ) {
     resObj = {
         'timestamp': utils.getTimestamp(),
         'items': allItems.filter( function( item ){
-                    if( item.timestamp > timestamp ) {
+                    console.log( "item: %s", JSON.stringify( item ) );
+                    if( item.timestamp > postTimestamp && ( arrayObjectIndexOf( postItems, item.item, "item" ) == -1 ) ) {
                         return item;
                     }
                  } )
     };
 
     return resObj;
+};
+
+function arrayObjectIndexOf( array, searchTerm, searchProperty ) {
+    for( var i = 0, len = array.length; i < len; i++ ) {
+        if( array[ i ][ searchProperty ] == searchTerm )
+            return i;
+    }
+    
+    return -1;
 };
 
 module.exports = itemDataSource;
