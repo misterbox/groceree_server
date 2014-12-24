@@ -102,7 +102,6 @@ itemDataSource.prototype.getItemsSince = function( postTimestamp, postItems ) {
     resObj = {
         'timestamp': utils.getTimestamp(),
         'items': allItems.filter( function( item ){
-                    console.log( "item: %s", JSON.stringify( item ) );
                     if( item.timestamp > postTimestamp && ( arrayObjectIndexOf( postItems, item.item, "item" ) == -1 ) ) {
                         return item;
                     }

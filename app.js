@@ -20,13 +20,14 @@ http.createServer( function ( req, res ) {
     // First level will be at urlParts[ 1 ]
     var urlParts = req.url.split( "/" );
     var action = urlParts[ 1 ];
-    //res.writeHead( 200, { 'Content-Type': 'application/json' } );
 
     switch( req.method ) {
         case "GET":
             if( action == 'list' ) {
                 var curTimestamp = utils.getTimestamp();
                 console.log( "GET response timestamp: " + curTimestamp );
+
+                // Build response object as the current timestamp and all items
                 var resObj = {
                     'timestamp': curTimestamp,
                     'items': allItems
@@ -53,6 +54,7 @@ http.createServer( function ( req, res ) {
                 res.end( resString );
             }
         case "POST":
+            // TODO: Gracefully handle malformed requests
             if( action == 'syncItems' ) {
                 var body = "";
 
@@ -70,6 +72,8 @@ http.createServer( function ( req, res ) {
                     console.log( "POST request timestamp: " + postTimestamp ); 
                     console.log( "postItems length: " + postItems.length );
                     console.log( "postItems: " + JSON.stringify( postItems ) );
+
+                    // If the request payload was not empty
                     if( postItems.length ) {
                         /*
                         Pre-work:
@@ -77,12 +81,10 @@ http.createServer( function ( req, res ) {
                             Sort the 'postData' array
                         */
 
-                        console.log( "Lower-casing postData" );
                         postItems.forEach( function( itemObj, i, items ) {
                             itemObj.item = itemObj.item.toLowerCase();
                         } );
 
-                        console.log( "Sorting postData" );
                         postItems.sort( function( a, b ) {
                             if( a.item.localeCompare( b.item ) < 0 ) {
                                 return -1;
@@ -92,9 +94,6 @@ http.createServer( function ( req, res ) {
 
                             return 0;
                         } );
-
-                        console.log( "timestamp sent: " + postTimestamp );
-                        console.log( "items sent: " + JSON.stringify( postItems ) );
 
                         /*
                         For each itemObj sent in postData:
@@ -127,8 +126,8 @@ http.createServer( function ( req, res ) {
 
                     // Build an object with items that have changed since 'postTimestamp'
                     // Do not include items just sent to us
-                    resObj = dataSource.getItemsSince( postTimestamp, postItems );
-                    resString = JSON.stringify( resObj );
+                    var resObj = dataSource.getItemsSince( postTimestamp, postItems );
+                    var resString = JSON.stringify( resObj );
 
                     console.log( "POST response timestamp: " + resObj.timestamp );
 
