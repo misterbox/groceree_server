@@ -86,12 +86,11 @@ itemDataSource.prototype.addItem = function( newItem ) {
 };
 
 itemDataSource.prototype.updateItem = function( item, index ) {
-    var curTimestamp = utils.getTimestamp();
     allItems[ index ].isMarked = item.isMarked;
     allItems[ index ].isDeleted = item.isDeleted;
-    allItems[ index ].timestamp = curTimestamp;
+    allItems[ index ].timestamp = item.timestamp;
 
-    db.run( stmtUpdItem, item.isMarked, item.isDeleted, curTimestamp, item.item, function( err ) {
+    db.run( stmtUpdItem, item.isMarked, item.isDeleted, item.timestamp, item.item, function( err ) {
         if( err ) {
             console.log( "Error updating item %d: %s", allItems[ index ].id, allItems[ index ].item );
         }
