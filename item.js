@@ -3,9 +3,10 @@
 */
 
 // Item object constructor
-function Item( id, item, isMarked, isDeleted, timestamp ) {
+function Item( id, item, isMarked, isDeleted, timestamp, version ) {
     this.id = id;
     this.item = item;
+    this.version = version;
     
     if( isMarked ) {
         this.isMarked = true;

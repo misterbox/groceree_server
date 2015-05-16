@@ -8,39 +8,42 @@ var COLUMN_ITEM = "item";
 var COLUMN_ISMARKED = "isMarked";
 var COLUMN_ISDELETED = "isDeleted";
 var COLUMN_TIMESTAMP = "timestamp";
+var COLUMN_VERSION = "version";
 
 // Generic statement to get all columns of all rows
 var stmtAllRows = "SELECT " + COLUMN_ID + ", " + COLUMN_ITEM
     + ", " + COLUMN_ISMARKED + ", " + COLUMN_ISDELETED + ", "
-    + COLUMN_TIMESTAMP + " FROM " + TABLE_ITEM + " ORDER BY " + COLUMN_ITEM;
+    + COLUMN_TIMESTAMP + ", " + COLUMN_VERSION + " FROM " + TABLE_ITEM
+    + " ORDER BY " + COLUMN_ITEM;
 
 // Insert Item statement
-var stmtInsItem = "INSERT INTO " + TABLE_ITEM + " (" + COLUMN_ITEM + ", " + COLUMN_ISMARKED
-    + ", " + COLUMN_ISDELETED + ", " + COLUMN_TIMESTAMP + ") VALUES (?,?,?,?)"
+var stmtInsItem = "INSERT INTO " + TABLE_ITEM + " (" + COLUMN_ITEM + ", " + COLUMN_ISMARKED 
+    + ", " + COLUMN_ISDELETED + ", " + COLUMN_TIMESTAMP + ", " + COLUMN_VERSION + ") VALUES (?,?,?,?,?)";
 
 // Select item by id statement
 var stmtRowById = "SELECT " + COLUMN_ID + ", " + COLUMN_ITEM
     + ", " + COLUMN_ISMARKED + ", " + COLUMN_ISDELETED + ", "
-    + COLUMN_TIMESTAMP + " FROM " + TABLE_ITEM + " WHERE " + COLUMN_ID + " = ?";
+    + COLUMN_TIMESTAMP + ", " + COLUMN_VERSION + " FROM " + TABLE_ITEM
+    + " WHERE " + COLUMN_ID + " = ?";
 
 // Update item by name
 var stmtUpdItem = "UPDATE " + TABLE_ITEM + " SET " + COLUMN_ISMARKED + " = ?, " +
-    COLUMN_ISDELETED + " = ?, " + COLUMN_TIMESTAMP + " = ? WHERE " + COLUMN_ITEM +
-    " = ?";
+    COLUMN_ISDELETED + " = ?, " + COLUMN_TIMESTAMP + " = ?, "
+    + COLUMN_VERSION + " =? WHERE " + COLUMN_ITEM + " = ?";
 
 // Select rows by timestamp
 var stmtRowByTime = "SELECT * FROM " + TABLE_ITEM + " WHERE " + COLUMN_TIMESTAMP +
     " > ?";
 
 // Array to hold all items and item names in memory
-var allItems;
-var allItemNames;
+var allItems; // All item objects
+var allItemIDs; // Array of strictly IDs
 
 var db;
 
 var itemDataSource = function(itemsAry, itemNamesAry ) {
     allItems = itemsAry;
-    allItemNames = itemNamesAry;
+    allItemIDs = itemNamesAry;
 };
 
 itemDataSource.prototype.open = function() {
@@ -51,8 +54,8 @@ itemDataSource.prototype.open = function() {
                 if( err ) {
                     console.log( "Error retrieving items: " + err.message );
                 } else {
-                    allItems.push( new itemObj( row.id, row.item, row.isMarked, row.isDeleted, row.timestamp ) );
-                    allItemNames.push( row.item );
+                    allItems.push( new itemObj( row.id, row.item, row.isMarked, row.isDeleted, row.timestamp, row.version ) );
+                    allItemIDs.push( row.id );
                 }
             } );
         } else {
@@ -63,12 +66,12 @@ itemDataSource.prototype.open = function() {
 
 itemDataSource.prototype.addItem = function( newItem ) {
     var curTimestamp = utils.getTimestamp();
-    allItems.push( new itemObj( newItem.id, newItem.item, newItem.isMarked, newItem.isDeleted, curTimestamp ) );
+    allItems.push( new itemObj( newItem.id, newItem.item, newItem.isMarked, newItem.isDeleted, curTimestamp, newItem.version ) );
     var itemIndex = allItems.length - 1;
-    allItemNames.push( newItem.item );
+    allItemIDs.push( newItem.id );
 
     // Insert items in to db, then immediately retrieve this row turning it into an Item object
-    db.run( stmtInsItem, newItem.item, newItem.isMarked, newItem.isDeleted, curTimestamp, function( err ) {
+    db.run( stmtInsItem, newItem.item, newItem.isMarked, newItem.isDeleted, curTimestamp, newItem.version, function( err ) {
         if( err ) {
             console.log( "Error inserting new item: " + err.message );
         } else {
@@ -89,8 +92,9 @@ itemDataSource.prototype.updateItem = function( item, index ) {
     allItems[ index ].isMarked = item.isMarked;
     allItems[ index ].isDeleted = item.isDeleted;
     allItems[ index ].timestamp = item.timestamp;
+    allItems[ index ].version = item.version;
 
-    db.run( stmtUpdItem, item.isMarked, item.isDeleted, item.timestamp, item.item, function( err ) {
+    db.run( stmtUpdItem, item.isMarked, item.isDeleted, item.timestamp, item.item, item.version, function( err ) {
         if( err ) {
             console.log( "Error updating item %d: %s", allItems[ index ].id, allItems[ index ].item );
         }
@@ -101,7 +105,7 @@ itemDataSource.prototype.getItemsSince = function( postTimestamp, postItems ) {
     resObj = {
         'timestamp': utils.getTimestamp(),
         'items': allItems.filter( function( item ){
-                    if( item.timestamp > postTimestamp && ( arrayObjectIndexOf( postItems, item.item, "item" ) == -1 ) ) {
+                    if( item.timestamp >= postTimestamp ) {
                         return item;
                     }
                  } )

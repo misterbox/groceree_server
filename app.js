@@ -7,10 +7,10 @@ var utils = require( './utils.js' );
 
 // Array to hold all items and item names in memory
 var allItems = new Array();
-var allItemNames = new Array();
+var allItemIDs = new Array();
 
 var itemDataSource = require( './itemDataSource.js' );
-var dataSource = new itemDataSource( allItems, allItemNames );
+var dataSource = new itemDataSource( allItems, allItemIDs );
 dataSource.open();
 
 http.createServer( function ( req, res ) {
@@ -44,7 +44,7 @@ http.createServer( function ( req, res ) {
                 res.end( resString );
                 break;
             } else if( action == 'dump' ) {
-                resString = JSON.stringify( allItems ) + JSON.stringify( allItemNames );
+                resString = JSON.stringify( allItems ) + JSON.stringify( allItemIDs );
                 var headers = {
                     'Content-Type': 'text/plain',
                     'Content-Length':   resString.length
@@ -85,10 +85,11 @@ http.createServer( function ( req, res ) {
                             itemObj.item = itemObj.item.toLowerCase();
                         } );
 
+                        // Sort on item ID
                         postItems.sort( function( a, b ) {
-                            if( a.item.localeCompare( b.item ) < 0 ) {
+                            if( a.id.localeCompare( b.id ) < 0 ) {
                                 return -1;
-                            } else if( a.item.localeCompare( b.item ) > 0 ) {
+                            } else if( a.id.localeCompare( b.id ) > 0 ) {
                                 return 1;
                             }
 
@@ -97,24 +98,24 @@ http.createServer( function ( req, res ) {
 
                         /*
                         For each itemObj sent in postData:
-                        First check if itemObj is in our current list
+                        First check if itemObj is in our current list by ID
                         If not, add to list and insert in to db
-                        If so, compare timestamps of the two versions
-                            If our timestamp is greater, discard postData version
-                            If timestamp of postData version is greater, replace our version with it
+                        If so, compare versions of the two objects
+                            If our version is greater, discard postData object
+                            If version of postData object is greater or equal, replace our object with it
                                 Update this item's row in the db
                         */
                         // We're going to need an array of Item name strings to do this.
-                        // Search allItemNames for the occurrece of itemObj.item. The index
+                        // Search allItemIDs for the occurrece of itemObj.id. The index
                         // returned will correspond to the index to use in the allItems array.
                         postItems.forEach( function( newItem, i, items ) {
                             // Check if itemObj is an Item we already have
-                            index = allItemNames.indexOf( newItem.item );
+                            index = allItemIDs.indexOf( newItem.id );
                             console.log( "item: %s, index: %d", newItem.item, index );
 
                             // UPDATE ITEM
                             // If itemObj is found
-                            if( index >= 0 && newItem.timestamp > allItems[ index ].timestamp ) {
+                            if( index >= 0 && newItem.version >= allItems[ index ].version ) {
                                 console.log( "item updated: " + JSON.stringify( allItems[ index ] ) );
                                 dataSource.updateItem( newItem, index );
                             } else if( index < 0 ) { // INSERT NEW ITEM
@@ -125,7 +126,6 @@ http.createServer( function ( req, res ) {
                     }
 
                     // Build an object with items that have changed since 'postTimestamp'
-                    // Do not include items just sent to us
                     var resObj = dataSource.getItemsSince( postTimestamp, postItems );
                     var resString = JSON.stringify( resObj );
 

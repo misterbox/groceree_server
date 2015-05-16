@@ -1,19 +1,26 @@
 var http = require( 'http' );
+var utils = require( './utils.js' );
+
+var curTimestamp = utils.getTimestamp;
 
 var payload = {
-    'timestamp' : 1418255736,
+    'timestamp' : curTimestamp,
     'items' : [
         {
+            id: "test-1",
             item: "item 0",
-            isMarked: false,
+            isMarked: true,
             isDeleted: true,
-            timestamp: 1418255736
+            timestamp: 1418255736,
+            version: 1
         },
         {
+            id: "test-2",
             item: "tar",
             isMarked: true,
             isDeleted: true,
-            timestamp: 1418255736
+            timestamp: 1418255736,
+            version: 1
         },
     ]
 }
