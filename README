@@ -15,10 +15,12 @@ Method: GET
             'timestamp': <unix timestamp>,
             'items': [
                 {
-                    'item': <item name>,
+                    'id': <object id string>,
+                    'item': <item name string>,
                     'isMarked': <isMarked boolean>,
                     'isDeleted': <isDeleted boolean>,
-                    'timestamp': <Unix timestamp>
+                    'timestamp': <Unix timestamp>,
+                    'version': <version integer>
                 },
                 {
                     ...
@@ -31,13 +33,11 @@ Method: GET
 
         Where <unix timestamp> is in epoch time marked at the moment the response is sent.
 
-
-
 Method: POST
     /syncItems
-        Given a payload of a Unix timestamp and array of items, the server adds new items to the database,
-        and updates existing items if the payload item is 'newer'; 'newer' meaning it has a timestamp greater
-        than that of the server's existing item.
+        Given a payload of a Unix timestamp and array of item objects, the server adds new items to the database,
+        and updates existing items if the payload item object is 'newer'; 'newer' meaning it has a version number greater
+        or equal to that of the server's existing item.
         
         The payload should be of the form:
 
@@ -45,10 +45,12 @@ Method: POST
             'timestamp': <unix timestamp>,
             'items': [
                 {
-                    'item': <item name>,
+                    'id': <object id string>,
+                    'item': <item name string>,
                     'isMarked': <isMarked boolean>,
                     'isDeleted': <isDeleted boolean>,
-                    'timestamp': <Unix timestamp>
+                    'timestamp': <Unix timestamp>,
+                    'version': <version integer>
                 },
                 {
                     ...

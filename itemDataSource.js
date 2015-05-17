@@ -3,6 +3,7 @@ var itemObj = require( './item.js' );
 var utils = require( './utils.js' );
 
 var TABLE_ITEM = "item";
+var ROW_ID = "rowid";
 var COLUMN_ID = "id";
 var COLUMN_ITEM = "item";
 var COLUMN_ISMARKED = "isMarked";
@@ -17,23 +18,22 @@ var stmtAllRows = "SELECT " + COLUMN_ID + ", " + COLUMN_ITEM
     + " ORDER BY " + COLUMN_ITEM;
 
 // Insert Item statement
-var stmtInsItem = "INSERT INTO " + TABLE_ITEM + " (" + COLUMN_ITEM + ", " + COLUMN_ISMARKED 
-    + ", " + COLUMN_ISDELETED + ", " + COLUMN_TIMESTAMP + ", " + COLUMN_VERSION + ") VALUES (?,?,?,?,?)";
+var stmtInsItem = "INSERT INTO " + TABLE_ITEM + " (" + COLUMN_ID + ", " + COLUMN_ITEM + ", " + COLUMN_ISMARKED 
+    + ", " + COLUMN_ISDELETED + ", " + COLUMN_TIMESTAMP + ", " + COLUMN_VERSION + ") VALUES (?,?,?,?,?,?)";
 
 // Select item by id statement
 var stmtRowById = "SELECT " + COLUMN_ID + ", " + COLUMN_ITEM
     + ", " + COLUMN_ISMARKED + ", " + COLUMN_ISDELETED + ", "
     + COLUMN_TIMESTAMP + ", " + COLUMN_VERSION + " FROM " + TABLE_ITEM
-    + " WHERE " + COLUMN_ID + " = ?";
+    + " WHERE " + ROW_ID + " = ?";
 
-// Update item by name
-var stmtUpdItem = "UPDATE " + TABLE_ITEM + " SET " + COLUMN_ISMARKED + " = ?, " +
-    COLUMN_ISDELETED + " = ?, " + COLUMN_TIMESTAMP + " = ?, "
-    + COLUMN_VERSION + " =? WHERE " + COLUMN_ITEM + " = ?";
+// Update item by id
+var stmtUpdItem = "UPDATE " + TABLE_ITEM + " SET " + COLUMN_ITEM + " = ?, " + COLUMN_ISMARKED + " = ?, "
+    + COLUMN_ISDELETED + " = ?, " + COLUMN_TIMESTAMP + " = ?, " + COLUMN_VERSION + " =? WHERE " + COLUMN_ID + " = ?";
 
 // Select rows by timestamp
-var stmtRowByTime = "SELECT * FROM " + TABLE_ITEM + " WHERE " + COLUMN_TIMESTAMP +
-    " > ?";
+var stmtRowByTime = "SELECT * FROM " + TABLE_ITEM + " WHERE " + COLUMN_TIMESTAMP
+    + " > ?";
 
 // Array to hold all items and item names in memory
 var allItems; // All item objects
@@ -41,9 +41,9 @@ var allItemIDs; // Array of strictly IDs
 
 var db;
 
-var itemDataSource = function(itemsAry, itemNamesAry ) {
+var itemDataSource = function( itemsAry, itemIDAry ) {
     allItems = itemsAry;
-    allItemIDs = itemNamesAry;
+    allItemIDs = itemIDAry;
 };
 
 itemDataSource.prototype.open = function() {
@@ -71,7 +71,7 @@ itemDataSource.prototype.addItem = function( newItem ) {
     allItemIDs.push( newItem.id );
 
     // Insert items in to db, then immediately retrieve this row turning it into an Item object
-    db.run( stmtInsItem, newItem.item, newItem.isMarked, newItem.isDeleted, curTimestamp, newItem.version, function( err ) {
+    db.run( stmtInsItem, newItem.id, newItem.item, newItem.isMarked, newItem.isDeleted, curTimestamp, newItem.version, function( err ) {
         if( err ) {
             console.log( "Error inserting new item: " + err.message );
         } else {
@@ -81,7 +81,7 @@ itemDataSource.prototype.addItem = function( newItem ) {
                 if( err ) {
                     console.log( "Error selecting row ID %d: %s", insertId, err.message );
                 } else {
-                    allItems[ itemIndex ].id = insertId;
+                    allItems[ itemIndex ].id = row.id;
                 }
             } );
         }
