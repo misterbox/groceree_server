@@ -10,7 +10,7 @@ var payload = {
             isMarked: true,
             isDeleted: true,
             timestamp: 1418255736,
-            version: 3
+            version: 12
         },
         {
             id: "test-2",
@@ -18,11 +18,19 @@ var payload = {
             isMarked: true,
             isDeleted: true,
             timestamp: 1418255736,
-            version: 3
+            version: 2
         },
         {
             id: "test-3",
             item: "item 1",
+            isMarked: false,
+            isDeleted: false,
+            timestamp: 1418255736,
+            version: 3
+        },
+        {
+            id: "test-4",
+            item: "item 4",
             isMarked: false,
             isDeleted: false,
             timestamp: 1418255736,

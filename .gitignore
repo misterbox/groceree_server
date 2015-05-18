@@ -1,4 +1,6 @@
 npm-debug.log
+*.out
 *build/
 data/*
 *.swp
+node_modules/*
