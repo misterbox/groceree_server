@@ -7,34 +7,18 @@ var payload = {
         {
             id: "test-1",
             item: "item 0",
-            isMarked: true,
-            isDeleted: true,
-            timestamp: 1418255736,
-            version: 12
-        },
-        {
-            id: "test-2",
-            item: "tar",
-            isMarked: true,
+            isMarked: false,
             isDeleted: true,
             timestamp: 1418255736,
             version: 2
         },
         {
-            id: "test-3",
-            item: "item 1",
-            isMarked: false,
-            isDeleted: false,
-            timestamp: 1418255736,
-            version: 3
-        },
-        {
-            id: "test-4",
-            item: "item 4",
-            isMarked: false,
-            isDeleted: false,
-            timestamp: 1418255736,
-            version: 1
+            "id": "977be400-a99c-468c-ad05-422416ce4e80",
+            "item": "test",
+            "version": 3,
+            "isMarked": true,
+            "isDeleted": false,
+            "timestamp": 1433809221
         },
     ]
 }

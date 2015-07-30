@@ -66,7 +66,7 @@ http.createServer( function ( req, res ) {
 
                 var headers = {
                     'Content-Type': 'application/json',
-                    'Content-Length': resString.length
+                    'Content-Length': Buffer.byteLength( resString )
                 };
 
                 res.writeHead( 200, headers );
@@ -75,7 +75,7 @@ http.createServer( function ( req, res ) {
                 resString = JSON.stringify( allItems ) + JSON.stringify( allItemIDs );
                 var headers = {
                     'Content-Type': 'text/plain',
-                    'Content-Length':   resString.length
+                    'Content-Length':   Buffer.byteLength( resString )
                 }
 
                 res.writeHead( 200, headers );
@@ -150,11 +150,16 @@ http.createServer( function ( req, res ) {
                             //console.log( "item: %s, index: %d", newItem.item, index );
 
                             // UPDATE ITEM
-                            // If itemObj is found
+                            // If itemObj is found and of newer or equal version.
                             if( index >= 0 && newItem.version >= allItems[ index ].version ) {
+                              // Don't keep older items of same version.
+                              if( ( newItem.version == allItems[ index ].version ) && ( newItem.timestamp < allItems[ index ].timestamp ) ) {
+                                return;
+                              } else {
                                 log.info( "Item updated: " + JSON.stringify( newItem ) );
                                 dataSource.updateItem( newItem, index );
                                 itemsUpdated++;
+                              }
                             } else if( index < 0 ) { // INSERT NEW ITEM
                                 log.info( "Item not found. Adding: ", JSON.stringify( newItem ) );
                                 dataSource.addItem( newItem );
@@ -174,7 +179,7 @@ http.createServer( function ( req, res ) {
 
                     var headers = {
                         'Content-Type': 'application/json',
-                        'Content-Length': resString.length
+                        'Content-Length': Buffer.byteLength( resString )
                     };
 
                     res.writeHead( 200, headers );
